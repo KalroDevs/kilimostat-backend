@@ -1,3 +1,4 @@
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -5,7 +6,7 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from core.admin_site import admin_site  
 
-
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 admin.site.site_header = "KilimoSTAT Administration"
 admin.site.site_title = "KilimoSTAT Admin Portal" 
@@ -15,13 +16,13 @@ urlpatterns = [
     # Admin
     # path('admin/', admin.site.urls),
     path('admin/', admin.site.urls),
-        
+
     # API
     path('api/', include('api.urls')),
-    
+
     # Dashboard (if you have one)
     # path('', include('dashboard.urls')),
-    
+
     # Redirect root to API docs in development
     path('', RedirectView.as_view(url='/api/swagger/')),
 ]

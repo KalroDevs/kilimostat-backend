@@ -79,7 +79,9 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+# FIXED: ALLOWED_HOSTS should be properly parsed from env
+# The env('ALLOWED_HOSTS') returns a list, but we need to ensure it's properly formatted
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
 # ============================================================================
 # APPLICATION DEFINITION
@@ -146,7 +148,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     
-    
     # Debug
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     
@@ -163,8 +164,6 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 ]
-
-
 
 ROOT_URLCONF = 'kilimostat4.urls'
 
@@ -199,31 +198,21 @@ WSGI_APPLICATION = 'kilimostat4.wsgi.application'
 # Check if we're running tests
 TESTING = sys.argv[1:2] == ['test']
 
-# if DEBUG or TESTING:
-#     # SQLite for development and testing
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'test_db.sqlite3' if TESTING else BASE_DIR / 'db.sqlite3',
-#             'ATOMIC_REQUESTS': True,
-#         }
-#     }
-# else:
-    # PostgreSQL for production
+# PostgreSQL for production
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': env('DB_NAME'),
-            'USER': env('DB_USER'),
-            'PASSWORD': env('DB_PASSWORD'),
-            'HOST': env('DB_HOST'),
-            'PORT': env('DB_PORT'),
-            'ATOMIC_REQUESTS': True,
-            'CONN_MAX_AGE': 600,
-            'OPTIONS': {
-                'connect_timeout': 10,
-            },
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+        'ATOMIC_REQUESTS': True,
+        'CONN_MAX_AGE': 600,
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
+    }
 }
 
 # Database connection pooling (for production)
@@ -297,7 +286,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
+# FIXED: Properly handle CSRF_TRUSTED_ORIGINS
+CSRF_TRUSTED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 
 # Security settings
 SECURE_BROWSER_XSS_FILTER = True
@@ -347,7 +337,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+#STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files
 MEDIA_URL = '/media/'
@@ -479,93 +471,6 @@ class JsonFormatter(logging.Formatter):
 LOG_DIR = BASE_DIR / 'logs'
 LOG_DIR.mkdir(exist_ok=True)
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'verbose': {
-#             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-#             'style': '{',
-#         },
-#         'simple': {
-#             'format': '{levelname} {asctime} {message}',
-#             'style': '{',
-#         },
-#         'json': {
-#             '()': 'kilimostat4.settings.JsonFormatter',
-#         },
-#     },
-#     'filters': {
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse',
-#         },
-#         'require_debug_true': {
-#             '()': 'django.utils.log.RequireDebugTrue',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'INFO',
-#             'filters': ['require_debug_true'],
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'simple',
-#         },
-#         'file': {
-#             'level': 'WARNING',
-#             'class': 'logging.handlers.RotatingFileHandler',
-#             'filename': LOG_DIR / 'django.log',
-#             'maxBytes': 10485760,  # 10MB
-#             'backupCount': 5,
-#             'formatter': 'verbose',
-#         },
-#         'error_file': {
-#             'level': 'ERROR',
-#             'class': 'logging.handlers.RotatingFileHandler',
-#             'filename': LOG_DIR / 'error.log',
-#             'maxBytes': 10485760,  # 10MB
-#             'backupCount': 5,
-#             'formatter': 'verbose',
-#         },
-#         'api_file': {
-#             'level': 'INFO',
-#             'class': 'logging.handlers.RotatingFileHandler',
-#             'filename': LOG_DIR / 'api.log',
-#             'maxBytes': 10485760,  # 10MB
-#             'backupCount': 5,
-#             'formatter': 'json',
-#         },
-#         'mail_admins': {
-#             'level': 'ERROR',
-#             'filters': ['require_debug_false'],
-#             'class': 'django.utils.log.AdminEmailHandler',
-#             'formatter': 'verbose',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['console', 'file'],
-#             'level': 'INFO',
-#             'propagate': True,
-#         },
-#         'django.request': {
-#             'handlers': ['error_file', 'mail_admins'],
-#             'level': 'ERROR',
-#             'propagate': False,
-#         },
-#         'api': {
-#             'handlers': ['console', 'api_file'],
-#             'level': 'DEBUG' if DEBUG else 'INFO',
-#             'propagate': True,
-#         },
-#         'core': {
-#             'handlers': ['console', 'file'],
-#             'level': 'DEBUG' if DEBUG else 'INFO',
-#             'propagate': True,
-#         },
-#     },
-# }
-
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -630,12 +535,9 @@ REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False,
 }
 
-
-
 # Add browsable API in debug mode
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append('rest_framework.renderers.BrowsableAPIRenderer')
-
 
 # DRF Spectacular settings
 SPECTACULAR_SETTINGS = {
@@ -670,16 +572,15 @@ SPECTACULAR_SETTINGS = {
 # CORS CONFIGURATION
 # ============================================================================
 
-# CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS')
-
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
+# FIXED: Use env.list for CORS_ALLOWED_ORIGINS
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",  
     "http://127.0.0.1:3001",
-]
-
+    "http://statistics.kilimo.go.ke",
+    "https://statistics.kilimo.go.ke",
+])
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
@@ -716,8 +617,6 @@ SWAGGER_SETTINGS = {
         'patch'
     ],
 }
-
-
 
 # ============================================================================
 # THIRD-PARTY APP SETTINGS

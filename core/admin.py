@@ -1066,11 +1066,11 @@ class KilimoSTATDataAdmin(ImportExportModelAdmin):
         """Return the import form class"""
         return KilimoSTATDataAdminForm
     
-    def get_import_data_kwargs(self, request, *args, **kwargs):
-        """Additional kwargs for import_data"""
-        return {
-            'dry_run': request.POST.get('dry_run') == '1',
-        }
+    #def get_import_data_kwargs(self, request, *args, **kwargs):
+     #   """Additional kwargs for import_data"""
+     #   return {
+      #      'dry_run': request.POST.get('dry_run') == '1',
+       # }
     
     def quality_badge(self, obj):
         metadata = obj.get_metadata()
